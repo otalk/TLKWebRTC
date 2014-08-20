@@ -1,12 +1,12 @@
 //
-//  JAHWebRTC.m
+//  TLKWebRTC.m
 //
 //
 //  Created by Jon Hjelle on 1/20/14.
 //  Copyright (c) 2014 Jon Hjelle. All rights reserved.
 //
 
-#import "JAHWebRTC.h"
+#import "TLKWebRTC.h"
 
 #import <AVFoundation/AVFoundation.h>
 
@@ -24,7 +24,7 @@
 #import "RTCVideoSource.h"
 #import "RTCVideoTrack.h"
 
-@interface JAHWebRTC () <RTCSessionDescriptonDelegate, RTCPeerConnectionDelegate>
+@interface TLKWebRTC () <RTCSessionDescriptonDelegate, RTCPeerConnectionDelegate>
 
 @property (readwrite, nonatomic) RTCMediaStream* localMediaStream;
 
@@ -39,10 +39,10 @@
 
 @end
 
-NSString* const JAHPeerConnectionRoleInitiator = @"JAHPeerConnectionRoleInitiator";
-NSString* const JAHPeerConnectionRoleReceiver = @"JAHPeerConnectionRoleReceiver";
+NSString* const TLKPeerConnectionRoleInitiator = @"TLKPeerConnectionRoleInitiator";
+NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver";
 
-@implementation JAHWebRTC
+@implementation TLKWebRTC
 
 - (id)initAllowingVideo:(BOOL)allowVideo {
     self = [super init];
@@ -115,14 +115,14 @@ NSString* const JAHPeerConnectionRoleReceiver = @"JAHPeerConnectionRoleReceiver"
 
 - (void)createOfferForPeerWithID:(NSString*)peerID {
     RTCPeerConnection* peerConnection = [self.peerConnections objectForKey:peerID];
-    [self.peerToRoleMap setObject:JAHPeerConnectionRoleInitiator forKey:peerID];
+    [self.peerToRoleMap setObject:TLKPeerConnectionRoleInitiator forKey:peerID];
     [peerConnection createOfferWithDelegate:self constraints:[self mediaConstraints]];
 }
 
 - (void)setRemoteDescription:(RTCSessionDescription*)remoteSDP forPeerWithID:(NSString*)peerID receiver:(BOOL)isReceiver {
     RTCPeerConnection* peerConnection = [self.peerConnections objectForKey:peerID];
     if (isReceiver) {
-        [self.peerToRoleMap setObject:JAHPeerConnectionRoleReceiver forKey:peerID];
+        [self.peerToRoleMap setObject:TLKPeerConnectionRoleReceiver forKey:peerID];
     }
     [peerConnection setRemoteDescriptionWithDelegate:self sessionDescription:remoteSDP];
 }
@@ -170,7 +170,7 @@ NSString* const JAHPeerConnectionRoleReceiver = @"JAHPeerConnectionRoleReceiver"
         NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
         if ([keys count] > 0) {
             NSString* role = [self.peerToRoleMap objectForKey:keys[0]];
-            if (role == JAHPeerConnectionRoleReceiver) {
+            if (role == TLKPeerConnectionRoleReceiver) {
                 [self.signalDelegate sendSDPAnswer:peerConnection.localDescription forPeerWithID:keys[0]];
             }
         }

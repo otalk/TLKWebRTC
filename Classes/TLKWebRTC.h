@@ -1,5 +1,5 @@
 //
-//  JAHWebRTC.h
+//  TLKWebRTC.h
 //  
 //
 //  Created by Jon Hjelle on 1/20/14.
@@ -15,11 +15,11 @@
 
 @class RTCICEServer;
 
-@protocol JAHSignalDelegate;
+@protocol TLKSignalDelegate;
 
-@interface JAHWebRTC : NSObject
+@interface TLKWebRTC : NSObject
 
-@property (nonatomic, weak) id <JAHSignalDelegate> signalDelegate;
+@property (nonatomic, weak) id <TLKSignalDelegate> signalDelegate;
 
 - (id)initAllowingVideo:(BOOL)allowVideo;
 
@@ -40,7 +40,7 @@
 @end
 
 
-@protocol JAHSignalDelegate <NSObject>
+@protocol TLKSignalDelegate <NSObject>
 
 - (void)sendSDPOffer:(RTCSessionDescription*)offer forPeerWithID:(NSString*)peerID;
 - (void)sendSDPAnswer:(RTCSessionDescription*)answer forPeerWithID:(NSString*)peerID;
