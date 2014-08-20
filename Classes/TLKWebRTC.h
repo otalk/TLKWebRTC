@@ -1,9 +1,6 @@
 //
 //  TLKWebRTC.h
-//  
-//
-//  Created by Jon Hjelle on 1/20/14.
-//  Copyright (c) 2014 Jon Hjelle. All rights reserved.
+//  Copyright (c) 2014 &yet, LLC and TLKWebRTC contributors
 //
 
 #import <Foundation/Foundation.h>
