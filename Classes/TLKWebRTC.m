@@ -330,7 +330,7 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
     [self.localMediaStream addAudioTrack:audioTrack];
 
     if(self.allowVideo) {
-        AVCaptureDevice* device = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo][1];
+        AVCaptureDevice* device = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] lastObject];
         RTCVideoCapturer* capturer = [RTCVideoCapturer capturerWithDeviceName:[device localizedName]];
         RTCVideoSource *videoSource = [self.peerFactory videoSourceWithCapturer:capturer constraints:nil];
         RTCVideoTrack* videoTrack = [self.peerFactory videoTrackWithID:[[NSUUID UUID] UUIDString] source:videoSource];
