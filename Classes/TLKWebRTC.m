@@ -141,7 +141,13 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
 #pragma mark - RTCSessionDescriptionDelegate method
 
 - (void)peerConnection:(RTCPeerConnection*)peerConnection didCreateSessionDescription:(RTCSessionDescription*)sdp error:(NSError*)error {
-    [peerConnection setLocalDescriptionWithDelegate:self sessionDescription:sdp];
+    // Swap order of Opus and ISAC in requested codecs, Opus seems to be responsible for some audio corruption on older devices.
+    // TODO: this is pretty hacky and error prone, need a cleaner way to do this, or figure out what is wrong with Opus in this scenario
+    NSString* newSDP = [sdp.description stringByReplacingOccurrencesOfString:@"111 103" withString:@"103 111"];
+    
+    RTCSessionDescription* sessionDescription = [[RTCSessionDescription alloc] initWithType:sdp.type sdp:newSDP];
+                                                 
+    [peerConnection setLocalDescriptionWithDelegate:self sessionDescription:sessionDescription];
 }
 
 - (void)peerConnection:(RTCPeerConnection*)peerConnection didSetSessionDescriptionWithError:(NSError*)error {
