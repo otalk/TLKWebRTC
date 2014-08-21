@@ -59,7 +59,7 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
 	return self;
 }
 
--(void)commonSetup {
+- (void)commonSetup {
     _peerFactory = [[RTCPeerConnectionFactory alloc] init];
     _peerConnections = [NSMutableDictionary dictionary];
     _peerToRoleMap = [NSMutableDictionary dictionary];
@@ -140,44 +140,51 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
 
 #pragma mark - RTCSessionDescriptionDelegate method
 
+// Note: all these delegate calls come back on a random background thread inside WebRTC,
+// so all are bridged across to the main thread
+
 - (void)peerConnection:(RTCPeerConnection*)peerConnection didCreateSessionDescription:(RTCSessionDescription*)sdp error:(NSError*)error {
-    // Swap order of Opus and ISAC in requested codecs, Opus seems to be responsible for some audio corruption on older devices.
-    // TODO: this is pretty hacky and error prone, need a cleaner way to do this, or figure out what is wrong with Opus in this scenario
-    NSString* newSDP = [sdp.description stringByReplacingOccurrencesOfString:@"111 103" withString:@"103 111"];
-    
-    RTCSessionDescription* sessionDescription = [[RTCSessionDescription alloc] initWithType:sdp.type sdp:newSDP];
-                                                 
-    [peerConnection setLocalDescriptionWithDelegate:self sessionDescription:sessionDescription];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // Swap order of Opus and ISAC in requested codecs, Opus seems to be responsible for some audio corruption on older devices.
+        // TODO: this is pretty hacky and error prone, need a cleaner way to do this, or figure out what is wrong with Opus in this scenario
+        NSString* newSDP = [sdp.description stringByReplacingOccurrencesOfString:@"111 103" withString:@"103 111"];
+        
+        RTCSessionDescription* sessionDescription = [[RTCSessionDescription alloc] initWithType:sdp.type sdp:newSDP];
+                                                     
+        [peerConnection setLocalDescriptionWithDelegate:self sessionDescription:sessionDescription];
+    });
 }
 
 - (void)peerConnection:(RTCPeerConnection*)peerConnection didSetSessionDescriptionWithError:(NSError*)error {
-    if (peerConnection.iceGatheringState == RTCICEGatheringGathering) {
-        NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
-        if ([keys count] > 0) {
-            NSArray* candidates = [self.peerToICEMap objectForKey:keys[0]];
-            for (RTCICECandidate* candidate in candidates) {
-                [peerConnection addICECandidate:candidate];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (peerConnection.iceGatheringState == RTCICEGatheringGathering) {
+            NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
+            if ([keys count] > 0) {
+                NSArray* candidates = [self.peerToICEMap objectForKey:keys[0]];
+                for (RTCICECandidate* candidate in candidates) {
+                    [peerConnection addICECandidate:candidate];
+                }
+                [self.peerToICEMap removeObjectForKey:keys[0]];
             }
-            [self.peerToICEMap removeObjectForKey:keys[0]];
         }
-    }
 
-    if (peerConnection.signalingState == RTCSignalingHaveLocalOffer) {
-        NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
-        if ([keys count] > 0) {
-            [self.signalDelegate sendSDPOffer:peerConnection.localDescription forPeerWithID:keys[0]];
-        }
-    } else if (peerConnection.signalingState == RTCSignalingHaveRemoteOffer) {
-        [peerConnection createAnswerWithDelegate:self constraints:[self mediaConstraints]];
-    } else if (peerConnection.signalingState == RTCSignalingStable) {
-        NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
-        if ([keys count] > 0) {
-            NSString* role = [self.peerToRoleMap objectForKey:keys[0]];
-            if (role == TLKPeerConnectionRoleReceiver) {
-                [self.signalDelegate sendSDPAnswer:peerConnection.localDescription forPeerWithID:keys[0]];
+        if (peerConnection.signalingState == RTCSignalingHaveLocalOffer) {
+            NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
+            if ([keys count] > 0) {
+                [self.signalDelegate sendSDPOffer:peerConnection.localDescription forPeerWithID:keys[0]];
+            }
+        } else if (peerConnection.signalingState == RTCSignalingHaveRemoteOffer) {
+            [peerConnection createAnswerWithDelegate:self constraints:[self mediaConstraints]];
+        } else if (peerConnection.signalingState == RTCSignalingStable) {
+            NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
+            if ([keys count] > 0) {
+                NSString* role = [self.peerToRoleMap objectForKey:keys[0]];
+                if (role == TLKPeerConnectionRoleReceiver) {
+                    [self.signalDelegate sendSDPAnswer:peerConnection.localDescription forPeerWithID:keys[0]];
+                }
             }
         }
-    }
+    });
 }
 
 #pragma mark - String utilities
