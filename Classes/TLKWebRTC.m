@@ -48,20 +48,20 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
 - (instancetype)initWithVideo:(BOOL)allowVideo {
     self = [super init];
-	if (self) {
+    if (self) {
         self.allowVideo = allowVideo;
         [self _commonSetup];
-	}
-	return self;
+    }
+    return self;
 }
 
 - (instancetype)init {
-	self = [super init];
-	if (self) {
+    self = [super init];
+    if (self) {
         self.allowVideo = YES;
         [self _commonSetup];
-	}
-	return self;
+    }
+    return self;
 }
 
 - (void)_commonSetup {
@@ -126,14 +126,14 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 }
 
 - (void)addPeerConnectionForID:(NSString *)identifier {
-	RTCPeerConnection *peer = [self.peerFactory peerConnectionWithICEServers:[self iceServers] constraints:[self _mediaConstraints] delegate:self];
+    RTCPeerConnection *peer = [self.peerFactory peerConnectionWithICEServers:[self iceServers] constraints:[self _mediaConstraints] delegate:self];
     [peer addStream:self.localMediaStream];
-	[self.peerConnections setObject:peer forKey:identifier];
+    [self.peerConnections setObject:peer forKey:identifier];
 }
 
 - (void)removePeerConnectionForID:(NSString *)identifier {
     RTCPeerConnection* peer = self.peerConnections[identifier];
-	[self.peerConnections removeObjectForKey:identifier];
+    [self.peerConnections removeObjectForKey:identifier];
     [self.peerToRoleMap removeObjectForKey:identifier];
     [peer close];
 }
