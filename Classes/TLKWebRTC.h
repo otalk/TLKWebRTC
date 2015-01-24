@@ -39,12 +39,12 @@
 // WebRTC signal delegate protocol
 @protocol TLKWebRTCDelegate <NSObject>
 @optional
-- (void)sendSDPOffer:(RTCSessionDescription*)offer forPeerWithID:(NSString*)peerID;
-- (void)sendSDPAnswer:(RTCSessionDescription*)answer forPeerWithID:(NSString*)peerID;
-- (void)sendICECandidate:(RTCICECandidate*)candidate forPeerWithID:(NSString*)peerID;
-- (void)ICEConnectionStateChanged:(RTCICEConnectionState)state forPeerWithID:(NSString*)peerID;
+- (void)webRTC:(TLKWebRTC *)webRTC didSendSDPOffer:(RTCSessionDescription *)offer forPeerWithID:(NSString *)peerID;
+- (void)webRTC:(TLKWebRTC *)webRTC didSendSDPAnswer:(RTCSessionDescription *)answer forPeerWithID:(NSString* )peerID;
+- (void)webRTC:(TLKWebRTC *)webRTC didSendICECandidate:(RTCICECandidate *)candidate forPeerWithID:(NSString *)peerID;
+- (void)webRTC:(TLKWebRTC *)webRTC didObserveICEConnectionStateChange:(RTCICEConnectionState)state forPeerWithID:(NSString *)peerID;
 
-- (void)addedStream:(RTCMediaStream*)stream forPeerWithID:(NSString*)peerID;
-- (void)removedStream:(RTCMediaStream*)stream forPeerWithID:(NSString*)peerID;
+- (void)webRTC:(TLKWebRTC *)webRTC addedStream:(RTCMediaStream *)stream forPeerWithID:(NSString *)peerID;
+- (void)webRTC:(TLKWebRTC *)webRTC removedStream:(RTCMediaStream *)stream forPeerWithID:(NSString *)peerID;
 
 @end

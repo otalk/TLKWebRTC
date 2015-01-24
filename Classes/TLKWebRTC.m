@@ -174,7 +174,7 @@ static NSString * const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleR
         if (peerConnection.signalingState == RTCSignalingHaveLocalOffer) {
             NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
             if ([keys count] > 0) {
-                [self.delegate sendSDPOffer:peerConnection.localDescription forPeerWithID:keys[0]];
+                [self.delegate webRTC:self didSendSDPOffer:peerConnection.localDescription forPeerWithID:keys[0]];
             }
         } else if (peerConnection.signalingState == RTCSignalingHaveRemoteOffer) {
             [peerConnection createAnswerWithDelegate:self constraints:[self mediaConstraints]];
@@ -183,7 +183,7 @@ static NSString * const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleR
             if ([keys count] > 0) {
                 NSString* role = [self.peerToRoleMap objectForKey:keys[0]];
                 if (role == TLKPeerConnectionRoleReceiver) {
-                    [self.delegate sendSDPAnswer:peerConnection.localDescription forPeerWithID:keys[0]];
+                    [self.delegate webRTC:self didSendSDPAnswer:peerConnection.localDescription forPeerWithID:keys[0]];
                 }
             }
         }
@@ -276,13 +276,13 @@ static NSString * const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleR
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection addedStream:(RTCMediaStream *)stream {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.delegate addedStream:stream forPeerWithID:[self identifierForPeer:peerConnection]];
+        [self.delegate webRTC:self addedStream:stream forPeerWithID:[self identifierForPeer:peerConnection]];
     });
 }
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection removedStream:(RTCMediaStream *)stream {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.delegate removedStream:stream forPeerWithID:[self identifierForPeer:peerConnection]];
+        [self.delegate webRTC:self removedStream:stream forPeerWithID:[self identifierForPeer:peerConnection]];
     });
 }
 
@@ -295,7 +295,7 @@ static NSString * const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleR
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection iceConnectionChanged:(RTCICEConnectionState)newState {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.delegate ICEConnectionStateChanged:newState forPeerWithID:[self identifierForPeer:peerConnection]];
+        [self.delegate webRTC:self didObserveICEConnectionStateChange:newState forPeerWithID:[self identifierForPeer:peerConnection]];
     });
 }
 
@@ -310,7 +310,7 @@ static NSString * const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleR
 
         NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
         if ([keys count] > 0) {
-            [self.delegate sendICECandidate:candidate forPeerWithID:keys[0]];
+            [self.delegate webRTC:self didSendICECandidate:candidate forPeerWithID:keys[0]];
         }
     });
 }
