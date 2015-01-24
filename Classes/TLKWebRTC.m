@@ -36,10 +36,12 @@
 
 @end
 
-NSString* const TLKPeerConnectionRoleInitiator = @"TLKPeerConnectionRoleInitiator";
-NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver";
+static NSString * const TLKPeerConnectionRoleInitiator = @"TLKPeerConnectionRoleInitiator";
+static NSString * const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver";
 
 @implementation TLKWebRTC
+
+#pragma mark - object lifecycle
 
 - (instancetype)initWithVideo:(BOOL)allowVideo {
     self = [super init];
@@ -74,6 +76,8 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
     
     [self initLocalStream];
 }
+
+#pragma mark -
 
 - (void)addICEServer:(RTCICEServer*)server {
     bool isStun = [server.URI.scheme isEqualToString:@"stun"];
