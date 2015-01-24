@@ -102,7 +102,7 @@ static NSString * const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleR
 
 - (void)addPeerConnectionForID:(NSString*)identifier {
 	RTCPeerConnection* peer = [self.peerFactory peerConnectionWithICEServers:[self iceServers] constraints:[self mediaConstraints] delegate:self];
-    [peer addStream:self.localMediaStream constraints:[self mediaConstraints]];
+    [peer addStream:self.localMediaStream];
 	[self.peerConnections setObject:peer forKey:identifier];
 }
 
@@ -316,6 +316,11 @@ static NSString * const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleR
         }
     });
 }
+
+- (void)peerConnection:(RTCPeerConnection*)peerConnection didOpenDataChannel:(RTCDataChannel*)dataChannel {
+}
+
+// New data channel has been opened.
 
 #pragma mark -
 
