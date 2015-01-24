@@ -41,25 +41,25 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
 
 @implementation TLKWebRTC
 
-- (id)initAllowingVideo:(BOOL)allowVideo {
+- (instancetype)initWithVideo:(BOOL)allowVideo {
     self = [super init];
 	if (self) {
         self.allowVideo = allowVideo;
-        [self commonSetup];
+        [self _commonSetup];
 	}
 	return self;
 }
 
-- (id)init {
+- (instancetype)init {
 	self = [super init];
 	if (self) {
         self.allowVideo = YES;
-        [self commonSetup];
+        [self _commonSetup];
 	}
 	return self;
 }
 
-- (void)commonSetup {
+- (void)_commonSetup {
     _peerFactory = [[RTCPeerConnectionFactory alloc] init];
     _peerConnections = [NSMutableDictionary dictionary];
     _peerToRoleMap = [NSMutableDictionary dictionary];
