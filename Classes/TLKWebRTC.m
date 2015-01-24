@@ -40,6 +40,7 @@
 
 static NSString * const TLKPeerConnectionRoleInitiator = @"TLKPeerConnectionRoleInitiator";
 static NSString * const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver";
+static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
 @implementation TLKWebRTC
 
@@ -71,7 +72,7 @@ static NSString * const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleR
     
     self.iceServers = [NSMutableArray new];
 
-    RTCICEServer* defaultStunServer = [[RTCICEServer alloc] initWithURI:[NSURL URLWithString:@"stun:stun.l.google.com:19302"] username:@"" password:@""];
+    RTCICEServer *defaultStunServer = [[RTCICEServer alloc] initWithURI:[NSURL URLWithString:TLKWebRTCSTUNHostname] username:@"" password:@""];
     [self.iceServers addObject:defaultStunServer];
 
     [RTCPeerConnectionFactory initializeSSL];
