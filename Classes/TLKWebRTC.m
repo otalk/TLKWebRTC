@@ -80,8 +80,7 @@ static NSString * const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleR
 #pragma mark -
 
 - (void)addICEServer:(RTCICEServer*)server {
-    bool isStun = [server.URI.scheme isEqualToString:@"stun"];
-    
+    BOOL isStun = [server.URI.scheme isEqualToString:@"stun"];
     if (isStun) {
         // Array of servers is always stored with stun server in first index, and we only want one,
         // so if this is a stun server, replace it
