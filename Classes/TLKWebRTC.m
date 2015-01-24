@@ -13,7 +13,7 @@
 #import "RTCPair.h"
 #import "RTCMediaConstraints.h"
 #import "RTCSessionDescription.h"
-#import "RTCSessionDescriptonDelegate.h"
+#import "RTCSessionDescriptionDelegate.h"
 #import "RTCPeerConnectionDelegate.h"
 
 #import "RTCAudioTrack.h"
@@ -21,7 +21,9 @@
 #import "RTCVideoSource.h"
 #import "RTCVideoTrack.h"
 
-@interface TLKWebRTC () <RTCSessionDescriptonDelegate, RTCPeerConnectionDelegate>
+@interface TLKWebRTC () <
+    RTCSessionDescriptionDelegate,
+    RTCPeerConnectionDelegate>
 
 @property (readwrite, nonatomic) RTCMediaStream* localMediaStream;
 
