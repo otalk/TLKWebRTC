@@ -12,11 +12,11 @@
 
 @class RTCICEServer;
 
-@protocol TLKSignalDelegate;
+@protocol TLKWebRTCDelegate;
 
 @interface TLKWebRTC : NSObject
 
-@property (nonatomic, weak) id <TLKSignalDelegate> signalDelegate;
+@property (nonatomic, weak) id <TLKWebRTCDelegate> delegate;
 
 - (id)initAllowingVideo:(BOOL)allowVideo;
 
@@ -36,9 +36,9 @@
 
 @end
 
-
-@protocol TLKSignalDelegate <NSObject>
-
+// WebRTC signal delegate protocol
+@protocol TLKWebRTCDelegate <NSObject>
+@optional
 - (void)sendSDPOffer:(RTCSessionDescription*)offer forPeerWithID:(NSString*)peerID;
 - (void)sendSDPAnswer:(RTCSessionDescription*)answer forPeerWithID:(NSString*)peerID;
 - (void)sendICECandidate:(RTCICECandidate*)candidate forPeerWithID:(NSString*)peerID;
