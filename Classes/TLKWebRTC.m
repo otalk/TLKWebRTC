@@ -77,10 +77,34 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
     [RTCPeerConnectionFactory initializeSSL];
     
-    [self initLocalStream];
+    [self _createLocalStream];
 }
 
-#pragma mark -
+- (void)_createLocalStream {
+    self.localMediaStream = [self.peerFactory mediaStreamWithLabel:[[NSUUID UUID] UUIDString]];
+
+    RTCAudioTrack *audioTrack = [self.peerFactory audioTrackWithID:[[NSUUID UUID] UUIDString]];
+    [self.localMediaStream addAudioTrack:audioTrack];
+
+    if (self.allowVideo) {
+        AVCaptureDevice *device = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] lastObject];
+        RTCVideoCapturer *capturer = [RTCVideoCapturer capturerWithDeviceName:[device localizedName]];
+        RTCVideoSource *videoSource = [self.peerFactory videoSourceWithCapturer:capturer constraints:nil];
+        RTCVideoTrack *videoTrack = [self.peerFactory videoTrackWithID:[[NSUUID UUID] UUIDString] source:videoSource];
+        [self.localMediaStream addVideoTrack:videoTrack];
+    }
+}
+
+- (RTCMediaConstraints *)_mediaConstraints {
+    RTCPair *audioConstraint = [[RTCPair alloc] initWithKey:@"OfferToReceiveAudio" value:@"true"];
+    RTCPair *videoConstraint = [[RTCPair alloc] initWithKey:@"OfferToReceiveVideo" value:self.allowVideo ? @"true" : @"false"];
+    RTCPair *sctpConstraint = [[RTCPair alloc] initWithKey:@"internalSctpDataChannels" value:@"true"];
+    RTCPair *dtlsConstraint = [[RTCPair alloc] initWithKey:@"DtlsSrtpKeyAgreement" value:@"true"];
+
+    return [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@[audioConstraint, videoConstraint] optionalConstraints:@[sctpConstraint, dtlsConstraint]];
+}
+
+#pragma mark - ICE server
 
 - (void)addICEServer:(RTCICEServer *)server {
     BOOL isStun = [server.URI.scheme isEqualToString:@"stun"];
@@ -102,7 +126,7 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 }
 
 - (void)addPeerConnectionForID:(NSString *)identifier {
-	RTCPeerConnection* peer = [self.peerFactory peerConnectionWithICEServers:[self iceServers] constraints:[self mediaConstraints] delegate:self];
+	RTCPeerConnection *peer = [self.peerFactory peerConnectionWithICEServers:[self iceServers] constraints:[self _mediaConstraints] delegate:self];
     [peer addStream:self.localMediaStream];
 	[self.peerConnections setObject:peer forKey:identifier];
 }
@@ -119,7 +143,7 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 - (void)createOfferForPeerWithID:(NSString *)peerID {
     RTCPeerConnection *peerConnection = [self.peerConnections objectForKey:peerID];
     [self.peerToRoleMap setObject:TLKPeerConnectionRoleInitiator forKey:peerID];
-    [peerConnection createOfferWithDelegate:self constraints:[self mediaConstraints]];
+    [peerConnection createOfferWithDelegate:self constraints:[self _mediaConstraints]];
 }
 
 - (void)setRemoteDescription:(RTCSessionDescription *)remoteSDP forPeerWithID:(NSString *)peerID receiver:(BOOL)isReceiver {
@@ -180,7 +204,7 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
                 [self.delegate webRTC:self didSendSDPOffer:peerConnection.localDescription forPeerWithID:keys[0]];
             }
         } else if (peerConnection.signalingState == RTCSignalingHaveRemoteOffer) {
-            [peerConnection createAnswerWithDelegate:self constraints:[self mediaConstraints]];
+            [peerConnection createAnswerWithDelegate:self constraints:[self _mediaConstraints]];
         } else if (peerConnection.signalingState == RTCSignalingStable) {
             NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
             if ([keys count] > 0) {
@@ -268,14 +292,14 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
     return gatheringState;
 }
 
-#pragma mark - RTCPeerConnectionDelegate methods
+#pragma mark - RTCPeerConnectionDelegate
 
 // Note: all these delegate calls come back on a random background thread inside WebRTC,
 // so all are bridged across to the main thread
 
 - (void)peerConnectionOnError:(RTCPeerConnection *)peerConnection {
-    dispatch_async(dispatch_get_main_queue(), ^{
-    });
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//    });
 }
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection signalingStateChanged:(RTCSignalingState)stateChanged {
@@ -298,7 +322,7 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
 - (void)peerConnectionOnRenegotiationNeeded:(RTCPeerConnection *)peerConnection {
     dispatch_async(dispatch_get_main_queue(), ^{
-    //    [self.peerConnection createOfferWithDelegate:self constraints:[self mediaConstraints]];
+    //    [self.peerConnection createOfferWithDelegate:self constraints:[self _mediaConstraints]];
     // Is this delegate called when creating a PC that is going to *receive* an offer and return an answer?
     });
 }
@@ -326,34 +350,6 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 }
 
 - (void)peerConnection:(RTCPeerConnection*)peerConnection didOpenDataChannel:(RTCDataChannel*)dataChannel {
-}
-
-// New data channel has been opened.
-
-#pragma mark -
-
-- (RTCMediaConstraints*)mediaConstraints {
-    RTCPair* audioConstraint = [[RTCPair alloc] initWithKey:@"OfferToReceiveAudio" value:@"true"];
-    RTCPair* videoConstraint = [[RTCPair alloc] initWithKey:@"OfferToReceiveVideo" value:self.allowVideo ? @"true" : @"false"];
-    RTCPair* sctpConstraint = [[RTCPair alloc] initWithKey:@"internalSctpDataChannels" value:@"true"];
-    RTCPair* dtlsConstraint = [[RTCPair alloc] initWithKey:@"DtlsSrtpKeyAgreement" value:@"true"];
-
-    return [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@[audioConstraint, videoConstraint] optionalConstraints:@[sctpConstraint, dtlsConstraint]];
-}
-
-- (void)initLocalStream {
-    self.localMediaStream = [self.peerFactory mediaStreamWithLabel:[[NSUUID UUID] UUIDString]];
-
-    RTCAudioTrack* audioTrack = [self.peerFactory audioTrackWithID:[[NSUUID UUID] UUIDString]];
-    [self.localMediaStream addAudioTrack:audioTrack];
-
-    if(self.allowVideo) {
-        AVCaptureDevice* device = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] lastObject];
-        RTCVideoCapturer* capturer = [RTCVideoCapturer capturerWithDeviceName:[device localizedName]];
-        RTCVideoSource *videoSource = [self.peerFactory videoSourceWithCapturer:capturer constraints:nil];
-        RTCVideoTrack* videoTrack = [self.peerFactory videoTrackWithID:[[NSUUID UUID] UUIDString] source:videoSource];
-        [self.localMediaStream addVideoTrack:videoTrack];
-    }
 }
 
 @end
