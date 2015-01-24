@@ -195,70 +195,77 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
 #pragma mark - String utilities
 
-- (NSString*)stringForSignalingState:(RTCSignalingState)state {
+- (NSString *)stringForSignalingState:(RTCSignalingState)state {
+    NSString *signalingStateString = nil;
     switch (state) {
         case RTCSignalingStable:
-            return @"Stable";
+            signalingStateString = @"Stable";
             break;
         case RTCSignalingHaveLocalOffer:
-            return @"Have Local Offer";
+            signalingStateString = @"Have Local Offer";
             break;
         case RTCSignalingHaveRemoteOffer:
-            return @"Have Remote Offer";
+            signalingStateString = @"Have Remote Offer";
             break;
         case RTCSignalingClosed:
-            return @"Closed";
+            signalingStateString = @"Closed";
             break;
         default:
-            return @"Other state";
+            signalingStateString = @"Other state";
             break;
     }
+    
+    return signalingStateString;
 }
 
-- (NSString*)stringForConnectionState:(RTCICEConnectionState)state {
+- (NSString *)stringForConnectionState:(RTCICEConnectionState)state {
+    NSString *connectionStateString = nil;
     switch (state) {
         case RTCICEConnectionNew:
-            return @"New";
+            connectionStateString = @"New";
             break;
         case RTCICEConnectionChecking:
-            return @"Checking";
+            connectionStateString = @"Checking";
             break;
         case RTCICEConnectionConnected:
-            return @"Connected";
+            connectionStateString = @"Connected";
             break;
         case RTCICEConnectionCompleted:
-            return @"Completed";
+            connectionStateString = @"Completed";
             break;
         case RTCICEConnectionFailed:
-            return @"Failed";
+            connectionStateString = @"Failed";
             break;
         case RTCICEConnectionDisconnected:
-            return @"Disconnected";
+            connectionStateString = @"Disconnected";
             break;
         case RTCICEConnectionClosed:
-            return @"Closed";
+            connectionStateString = @"Closed";
             break;
         default:
-            return @"Other state";
+            connectionStateString = @"Other state";
             break;
     }
+    return connectionStateString;
 }
 
-- (NSString*)stringForGatheringState:(RTCICEGatheringState)state {
+- (NSString *)stringForGatheringState:(RTCICEGatheringState)state {
+    NSString *gatheringState = nil;
     switch (state) {
         case RTCICEGatheringNew:
-            return @"New";
+            gatheringState = @"New";
             break;
         case RTCICEGatheringGathering:
-            return @"Gathering";
+            gatheringState = @"Gathering";
             break;
         case RTCICEGatheringComplete:
-            return @"Complete";
+            gatheringState = @"Complete";
             break;
         default:
-            return @"Other state";
+            gatheringState = @"Other state";
             break;
     }
+    return gatheringState;
 }
 
 #pragma mark - RTCPeerConnectionDelegate methods
