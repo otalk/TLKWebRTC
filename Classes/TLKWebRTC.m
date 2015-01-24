@@ -25,16 +25,16 @@
     RTCSessionDescriptionDelegate,
     RTCPeerConnectionDelegate>
 
-@property (readwrite, nonatomic) RTCMediaStream* localMediaStream;
+@property (readwrite, nonatomic) RTCMediaStream *localMediaStream;
 
-@property (nonatomic, strong) RTCPeerConnectionFactory* peerFactory;
-@property (nonatomic, strong) NSMutableDictionary* peerConnections;
-@property (nonatomic, strong) NSMutableDictionary* peerToRoleMap;
-@property (nonatomic, strong) NSMutableDictionary* peerToICEMap;
+@property (nonatomic, strong) RTCPeerConnectionFactory *peerFactory;
+@property (nonatomic, strong) NSMutableDictionary *peerConnections;
+@property (nonatomic, strong) NSMutableDictionary *peerToRoleMap;
+@property (nonatomic, strong) NSMutableDictionary *peerToICEMap;
 
 @property BOOL allowVideo;
 
-@property (nonatomic, strong) NSMutableArray* iceServers;
+@property (nonatomic, strong) NSMutableArray *iceServers;
 
 @end
 
@@ -82,7 +82,7 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
 #pragma mark -
 
-- (void)addICEServer:(RTCICEServer*)server {
+- (void)addICEServer:(RTCICEServer *)server {
     BOOL isStun = [server.URI.scheme isEqualToString:@"stun"];
     if (isStun) {
         // Array of servers is always stored with stun server in first index, and we only want one,
@@ -94,20 +94,20 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
     }
 }
 
--(NSString*)identifierForPeer:(RTCPeerConnection*)peer {
-    NSArray* keys = [self.peerConnections allKeysForObject:peer];
+#pragma mark - Peer Connections
+
+- (NSString *)identifierForPeer:(RTCPeerConnection *)peer {
+    NSArray *keys = [self.peerConnections allKeysForObject:peer];
     return (keys.count == 0) ? nil : keys[0];
 }
 
-#pragma mark - Add/remove peerConnections
-
-- (void)addPeerConnectionForID:(NSString*)identifier {
+- (void)addPeerConnectionForID:(NSString *)identifier {
 	RTCPeerConnection* peer = [self.peerFactory peerConnectionWithICEServers:[self iceServers] constraints:[self mediaConstraints] delegate:self];
     [peer addStream:self.localMediaStream];
 	[self.peerConnections setObject:peer forKey:identifier];
 }
 
-- (void)removePeerConnectionForID:(NSString*)identifier {
+- (void)removePeerConnectionForID:(NSString *)identifier {
     RTCPeerConnection* peer = self.peerConnections[identifier];
 	[self.peerConnections removeObjectForKey:identifier];
     [self.peerToRoleMap removeObjectForKey:identifier];
@@ -116,24 +116,24 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
 #pragma mark -
 
-- (void)createOfferForPeerWithID:(NSString*)peerID {
-    RTCPeerConnection* peerConnection = [self.peerConnections objectForKey:peerID];
+- (void)createOfferForPeerWithID:(NSString *)peerID {
+    RTCPeerConnection *peerConnection = [self.peerConnections objectForKey:peerID];
     [self.peerToRoleMap setObject:TLKPeerConnectionRoleInitiator forKey:peerID];
     [peerConnection createOfferWithDelegate:self constraints:[self mediaConstraints]];
 }
 
-- (void)setRemoteDescription:(RTCSessionDescription*)remoteSDP forPeerWithID:(NSString*)peerID receiver:(BOOL)isReceiver {
-    RTCPeerConnection* peerConnection = [self.peerConnections objectForKey:peerID];
+- (void)setRemoteDescription:(RTCSessionDescription *)remoteSDP forPeerWithID:(NSString *)peerID receiver:(BOOL)isReceiver {
+    RTCPeerConnection *peerConnection = [self.peerConnections objectForKey:peerID];
     if (isReceiver) {
         [self.peerToRoleMap setObject:TLKPeerConnectionRoleReceiver forKey:peerID];
     }
     [peerConnection setRemoteDescriptionWithDelegate:self sessionDescription:remoteSDP];
 }
 
-- (void)addICECandidate:(RTCICECandidate*)candidate forPeerWithID:(NSString*)peerID {
-    RTCPeerConnection* peerConnection = [self.peerConnections objectForKey:peerID];
+- (void)addICECandidate:(RTCICECandidate*)candidate forPeerWithID:(NSString *)peerID {
+    RTCPeerConnection *peerConnection = [self.peerConnections objectForKey:peerID];
     if (peerConnection.iceGatheringState == RTCICEGatheringNew) {
-        NSMutableArray* candidates = [self.peerToICEMap objectForKey:peerID];
+        NSMutableArray *candidates = [self.peerToICEMap objectForKey:peerID];
         if (!candidates) {
             candidates = [NSMutableArray array];
             [self.peerToICEMap setObject:candidates forKey:peerID];
@@ -144,12 +144,12 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
     }
 }
 
-#pragma mark - RTCSessionDescriptionDelegate method
+#pragma mark - RTCSessionDescriptionDelegate
 
 // Note: all these delegate calls come back on a random background thread inside WebRTC,
 // so all are bridged across to the main thread
 
-- (void)peerConnection:(RTCPeerConnection*)peerConnection didCreateSessionDescription:(RTCSessionDescription*)sdp error:(NSError*)error {
+- (void)peerConnection:(RTCPeerConnection *)peerConnection didCreateSessionDescription:(RTCSessionDescription *)sdp error:(NSError *)error {
     dispatch_async(dispatch_get_main_queue(), ^{
         // Swap order of Opus and ISAC in requested codecs, Opus seems to be responsible for some audio corruption on older devices.
         // TODO: this is pretty hacky and error prone, need a cleaner way to do this, or figure out what is wrong with Opus in this scenario
@@ -161,12 +161,12 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
     });
 }
 
-- (void)peerConnection:(RTCPeerConnection*)peerConnection didSetSessionDescriptionWithError:(NSError*)error {
+- (void)peerConnection:(RTCPeerConnection *)peerConnection didSetSessionDescriptionWithError:(NSError *)error {
     dispatch_async(dispatch_get_main_queue(), ^{
         if (peerConnection.iceGatheringState == RTCICEGatheringGathering) {
-            NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
+            NSArray *keys = [self.peerConnections allKeysForObject:peerConnection];
             if ([keys count] > 0) {
-                NSArray* candidates = [self.peerToICEMap objectForKey:keys[0]];
+                NSArray *candidates = [self.peerToICEMap objectForKey:keys[0]];
                 for (RTCICECandidate* candidate in candidates) {
                     [peerConnection addICECandidate:candidate];
                 }
@@ -175,7 +175,7 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
         }
 
         if (peerConnection.signalingState == RTCSignalingHaveLocalOffer) {
-            NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
+            NSArray *keys = [self.peerConnections allKeysForObject:peerConnection];
             if ([keys count] > 0) {
                 [self.delegate webRTC:self didSendSDPOffer:peerConnection.localDescription forPeerWithID:keys[0]];
             }
