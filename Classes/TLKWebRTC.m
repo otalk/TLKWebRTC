@@ -32,7 +32,7 @@
 @property (nonatomic, strong) NSMutableDictionary *peerToRoleMap;
 @property (nonatomic, strong) NSMutableDictionary *peerToICEMap;
 
-@property BOOL allowVideo;
+@property (nonatomic) BOOL allowVideo;
 
 @property (nonatomic, strong) NSMutableArray *iceServers;
 
@@ -71,7 +71,6 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
     _peerToICEMap = [NSMutableDictionary dictionary];
     
     self.iceServers = [NSMutableArray new];
-
     RTCICEServer *defaultStunServer = [[RTCICEServer alloc] initWithURI:[NSURL URLWithString:TLKWebRTCSTUNHostname] username:@"" password:@""];
     [self.iceServers addObject:defaultStunServer];
 
