@@ -12,13 +12,16 @@
 
 @class RTCICEServer;
 
+@class AVCaptureDevice;
+
 @protocol TLKSignalDelegate;
 
 @interface TLKWebRTC : NSObject
 
 @property (nonatomic, weak) id <TLKSignalDelegate> signalDelegate;
 
-- (id)initAllowingVideo:(BOOL)allowVideo;
+- (instancetype)initAllowingVideo:(BOOL)allowVideo;
+- (instancetype)initAllowingVideoWithDevice:(AVCaptureDevice *)device;
 
 - (void)addPeerConnectionForID:(NSString*)identifier;
 - (void)removePeerConnectionForID:(NSString*)identifier;

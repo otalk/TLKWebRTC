@@ -31,6 +31,7 @@
 @property (nonatomic, strong) NSMutableDictionary* peerToICEMap;
 
 @property BOOL allowVideo;
+@property (nonatomic, strong) AVCaptureDevice* videoDevice;
 
 @property (nonatomic, strong) NSMutableArray* iceServers;
 
@@ -41,22 +42,24 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
 
 @implementation TLKWebRTC
 
-- (id)initAllowingVideo:(BOOL)allowVideo {
+- (instancetype)initAllowingVideo:(BOOL)allowVideo {
     self = [super init];
-	if (self) {
-        self.allowVideo = allowVideo;
+	  if (self) {
+        _allowVideo = allowVideo;
         [self commonSetup];
-	}
-	return self;
+  	}
+    return self;
 }
 
-- (id)init {
-	self = [super init];
-	if (self) {
-        self.allowVideo = YES;
-        [self commonSetup];
-	}
-	return self;
+- (instancetype)initAllowingVideoWithDevice:(AVCaptureDevice *)device {
+    _videoDevice = device;
+    return [self initAllowingVideo:YES];
+}
+
+- (instancetype)init {
+    // Set the default device
+    AVCaptureDevice* frontCamera = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] lastObject];
+    return [self initAllowingVideoWithDevice:frontCamera];
 }
 
 - (void)commonSetup {
@@ -330,8 +333,7 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
     [self.localMediaStream addAudioTrack:audioTrack];
 
     if(self.allowVideo) {
-        AVCaptureDevice* device = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] lastObject];
-        RTCVideoCapturer* capturer = [RTCVideoCapturer capturerWithDeviceName:[device localizedName]];
+        RTCVideoCapturer* capturer = [RTCVideoCapturer capturerWithDeviceName:[self.videoDevice localizedName]];
         RTCVideoSource *videoSource = [self.peerFactory videoSourceWithCapturer:capturer constraints:nil];
         RTCVideoTrack* videoTrack = [self.peerFactory videoTrackWithID:[[NSUUID UUID] UUIDString] source:videoSource];
         [self.localMediaStream addVideoTrack:videoTrack];
