@@ -13,7 +13,7 @@
 #import "RTCPair.h"
 #import "RTCMediaConstraints.h"
 #import "RTCSessionDescription.h"
-#import "RTCSessionDescriptonDelegate.h"
+#import "RTCSessionDescriptionDelegate.h"
 #import "RTCPeerConnectionDelegate.h"
 
 #import "RTCAudioTrack.h"
@@ -21,7 +21,7 @@
 #import "RTCVideoSource.h"
 #import "RTCVideoTrack.h"
 
-@interface TLKWebRTC () <RTCSessionDescriptonDelegate, RTCPeerConnectionDelegate>
+@interface TLKWebRTC () <RTCSessionDescriptionDelegate, RTCPeerConnectionDelegate>
 
 @property (readwrite, nonatomic) RTCMediaStream* localMediaStream;
 
@@ -43,20 +43,20 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
 
 - (id)initAllowingVideo:(BOOL)allowVideo {
     self = [super init];
-	if (self) {
+    if (self) {
         self.allowVideo = allowVideo;
         [self commonSetup];
-	}
-	return self;
+    }
+    return self;
 }
 
 - (id)init {
-	self = [super init];
-	if (self) {
+    self = [super init];
+    if (self) {
         self.allowVideo = YES;
         [self commonSetup];
-	}
-	return self;
+    }
+    return self;
 }
 
 - (void)commonSetup {
@@ -66,10 +66,10 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
     _peerToICEMap = [NSMutableDictionary dictionary];
     
     self.iceServers = [NSMutableArray new];
-
+    
     RTCICEServer* defaultStunServer = [[RTCICEServer alloc] initWithURI:[NSURL URLWithString:@"stun:stun.l.google.com:19302"] username:@"" password:@""];
     [self.iceServers addObject:defaultStunServer];
-
+    
     [RTCPeerConnectionFactory initializeSSL];
     
     [self initLocalStream];
@@ -96,14 +96,14 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
 #pragma mark - Add/remove peerConnections
 
 - (void)addPeerConnectionForID:(NSString*)identifier {
-	RTCPeerConnection* peer = [self.peerFactory peerConnectionWithICEServers:[self iceServers] constraints:[self mediaConstraints] delegate:self];
-    [peer addStream:self.localMediaStream constraints:[self mediaConstraints]];
-	[self.peerConnections setObject:peer forKey:identifier];
+    RTCPeerConnection* peer = [self.peerFactory peerConnectionWithICEServers:[self iceServers] constraints:[self mediaConstraints] delegate:self];
+    [peer addStream:self.localMediaStream];
+    [self.peerConnections setObject:peer forKey:identifier];
 }
 
 - (void)removePeerConnectionForID:(NSString*)identifier {
     RTCPeerConnection* peer = self.peerConnections[identifier];
-	[self.peerConnections removeObjectForKey:identifier];
+    [self.peerConnections removeObjectForKey:identifier];
     [self.peerToRoleMap removeObjectForKey:identifier];
     [peer close];
 }
@@ -150,7 +150,7 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
         NSString* newSDP = [sdp.description stringByReplacingOccurrencesOfString:@"111 103" withString:@"103 111"];
         
         RTCSessionDescription* sessionDescription = [[RTCSessionDescription alloc] initWithType:sdp.type sdp:newSDP];
-                                                     
+        
         [peerConnection setLocalDescriptionWithDelegate:self sessionDescription:sessionDescription];
     });
 }
@@ -167,7 +167,7 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
                 [self.peerToICEMap removeObjectForKey:keys[0]];
             }
         }
-
+        
         if (peerConnection.signalingState == RTCSignalingHaveLocalOffer) {
             NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
             if ([keys count] > 0) {
@@ -285,8 +285,8 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
 
 - (void)peerConnectionOnRenegotiationNeeded:(RTCPeerConnection *)peerConnection {
     dispatch_async(dispatch_get_main_queue(), ^{
-    //    [self.peerConnection createOfferWithDelegate:self constraints:[self mediaConstraints]];
-    // Is this delegate called when creating a PC that is going to *receive* an offer and return an answer?
+        //    [self.peerConnection createOfferWithDelegate:self constraints:[self mediaConstraints]];
+        // Is this delegate called when creating a PC that is going to *receive* an offer and return an answer?
     });
 }
 
@@ -304,7 +304,7 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection gotICECandidate:(RTCICECandidate *)candidate {
     dispatch_async(dispatch_get_main_queue(), ^{
-
+        
         NSArray* keys = [self.peerConnections allKeysForObject:peerConnection];
         if ([keys count] > 0) {
             [self.signalDelegate sendICECandidate:candidate forPeerWithID:keys[0]];
@@ -319,16 +319,16 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
     RTCPair* videoConstraint = [[RTCPair alloc] initWithKey:@"OfferToReceiveVideo" value:self.allowVideo ? @"true" : @"false"];
     RTCPair* sctpConstraint = [[RTCPair alloc] initWithKey:@"internalSctpDataChannels" value:@"true"];
     RTCPair* dtlsConstraint = [[RTCPair alloc] initWithKey:@"DtlsSrtpKeyAgreement" value:@"true"];
-
+    
     return [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@[audioConstraint, videoConstraint] optionalConstraints:@[sctpConstraint, dtlsConstraint]];
 }
 
 - (void)initLocalStream {
     self.localMediaStream = [self.peerFactory mediaStreamWithLabel:[[NSUUID UUID] UUIDString]];
-
+    
     RTCAudioTrack* audioTrack = [self.peerFactory audioTrackWithID:[[NSUUID UUID] UUIDString]];
     [self.localMediaStream addAudioTrack:audioTrack];
-
+    
     if(self.allowVideo) {
         AVCaptureDevice* device = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] lastObject];
         RTCVideoCapturer* capturer = [RTCVideoCapturer capturerWithDeviceName:[device localizedName]];
