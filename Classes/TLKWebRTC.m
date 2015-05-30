@@ -33,6 +33,7 @@
 @property (nonatomic, strong) NSMutableDictionary *peerToICEMap;
 
 @property (nonatomic) BOOL allowVideo;
+@property (nonatomic, strong) AVCaptureDevice *videoDevice;
 
 @property (nonatomic, strong) NSMutableArray *iceServers;
 
@@ -46,22 +47,24 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
 #pragma mark - object lifecycle
 
-- (instancetype)initWithVideo:(BOOL)allowVideo {
-    self = [super init];
-    if (self) {
-        self.allowVideo = allowVideo;
-        [self _commonSetup];
-    }
-    return self;
+- (instancetype)initAllowingVideo:(BOOL)allowVideo {
+	self = [super init];
+	if (self) {
+		_allowVideo = allowVideo;
+		[self _commonSetup];
+	}
+	return self;
+}
+
+- (instancetype)initAllowingVideoWithDevice:(AVCaptureDevice *)device {
+	_videoDevice = device;
+	return [self initAllowingVideo:YES];
 }
 
 - (instancetype)init {
-    self = [super init];
-    if (self) {
-        self.allowVideo = YES;
-        [self _commonSetup];
-    }
-    return self;
+	// Set the default device
+	AVCaptureDevice* frontCamera = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] lastObject];
+	return [self initAllowingVideoWithDevice:frontCamera];
 }
 
 - (void)_commonSetup {
@@ -86,8 +89,7 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
     [self.localMediaStream addAudioTrack:audioTrack];
 
     if (self.allowVideo) {
-        AVCaptureDevice *device = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] lastObject];
-        RTCVideoCapturer *capturer = [RTCVideoCapturer capturerWithDeviceName:[device localizedName]];
+        RTCVideoCapturer *capturer = [RTCVideoCapturer capturerWithDeviceName:[self.videoDevice localizedName]];
         RTCVideoSource *videoSource = [self.peerFactory videoSourceWithCapturer:capturer constraints:nil];
         RTCVideoTrack *videoTrack = [self.peerFactory videoTrackWithID:[[NSUUID UUID] UUIDString] source:videoSource];
         [self.localMediaStream addVideoTrack:videoTrack];
