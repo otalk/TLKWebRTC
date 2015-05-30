@@ -47,24 +47,30 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
 #pragma mark - object lifecycle
 
-- (instancetype)initAllowingVideo:(BOOL)allowVideo {
+- (instancetype)initAllowingVideoWithDevice:(AVCaptureDevice *)device {
 	self = [super init];
 	if (self) {
-		_allowVideo = allowVideo;
-		[self _commonSetup];
+		if (device) {
+			allowVideo = YES;
+			_videoDevice = device;
+		}
+		[self commonSetup];
 	}
 	return self;
 }
 
-- (instancetype)initAllowingVideoWithDevice:(AVCaptureDevice *)device {
-	_videoDevice = device;
-	return [self initAllowingVideo:YES];
+- (instancetype)initAllowingVideo:(BOOL)allowVideo {
+	// Set front camera as the default device
+	AVCaptureDevice* frontCamera;
+	if (allowVideo) {
+		frontCamera = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] lastObject];
+	}
+	return [self initAllowingVideoWithDevice:frontCamera];
 }
 
 - (instancetype)init {
-	// Set the default device
-	AVCaptureDevice* frontCamera = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo] lastObject];
-	return [self initAllowingVideoWithDevice:frontCamera];
+	// Use default device
+	return [self initAllowingVideo:YES];
 }
 
 - (void)_commonSetup {
