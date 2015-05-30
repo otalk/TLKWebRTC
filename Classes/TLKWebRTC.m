@@ -145,12 +145,7 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
 
 - (void)peerConnection:(RTCPeerConnection*)peerConnection didCreateSessionDescription:(RTCSessionDescription*)sdp error:(NSError*)error {
     dispatch_async(dispatch_get_main_queue(), ^{
-        // Swap order of Opus and ISAC in requested codecs, Opus seems to be responsible for some audio corruption on older devices.
-        // TODO: this is pretty hacky and error prone, need a cleaner way to do this, or figure out what is wrong with Opus in this scenario
-        NSString* newSDP = [sdp.description stringByReplacingOccurrencesOfString:@"111 103" withString:@"103 111"];
-        
-        RTCSessionDescription* sessionDescription = [[RTCSessionDescription alloc] initWithType:sdp.type sdp:newSDP];
-        
+        RTCSessionDescription* sessionDescription = [[RTCSessionDescription alloc] initWithType:sdp.type sdp:sdp.description];        
         [peerConnection setLocalDescriptionWithDelegate:self sessionDescription:sessionDescription];
     });
 }
@@ -287,6 +282,7 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
     dispatch_async(dispatch_get_main_queue(), ^{
         //    [self.peerConnection createOfferWithDelegate:self constraints:[self mediaConstraints]];
         // Is this delegate called when creating a PC that is going to *receive* an offer and return an answer?
+        NSLog(@"peerConnectionOnRenegotiationNeeded ?");
     });
 }
 
@@ -298,7 +294,7 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection iceGatheringChanged:(RTCICEGatheringState)newState {
     dispatch_async(dispatch_get_main_queue(), ^{
-        // I'm seeing this, but not sure what to do with it yet
+        NSLog(@"peerConnection iceGatheringChanged?");
     });
 }
 
@@ -309,6 +305,12 @@ NSString* const TLKPeerConnectionRoleReceiver = @"TLKPeerConnectionRoleReceiver"
         if ([keys count] > 0) {
             [self.signalDelegate sendICECandidate:candidate forPeerWithID:keys[0]];
         }
+    });
+}
+
+-(void)peerConnection:(RTCPeerConnection *)peerConnection didOpenDataChannel:(RTCDataChannel *)dataChannel {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"peerConnection didOpenDataChannel?");
     });
 }
 
