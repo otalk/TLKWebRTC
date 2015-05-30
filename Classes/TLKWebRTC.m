@@ -69,13 +69,13 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
     _peerConnections = [NSMutableDictionary dictionary];
     _peerToRoleMap = [NSMutableDictionary dictionary];
     _peerToICEMap = [NSMutableDictionary dictionary];
-    
+
     self.iceServers = [NSMutableArray new];
     RTCICEServer *defaultStunServer = [[RTCICEServer alloc] initWithURI:[NSURL URLWithString:TLKWebRTCSTUNHostname] username:@"" password:@""];
     [self.iceServers addObject:defaultStunServer];
 
     [RTCPeerConnectionFactory initializeSSL];
-    
+
     [self _createLocalStream];
 }
 
@@ -174,12 +174,7 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection didCreateSessionDescription:(RTCSessionDescription *)sdp error:(NSError *)error {
     dispatch_async(dispatch_get_main_queue(), ^{
-        // Swap order of Opus and ISAC in requested codecs, Opus seems to be responsible for some audio corruption on older devices.
-        // TODO: this is pretty hacky and error prone, need a cleaner way to do this, or figure out what is wrong with Opus in this scenario
-        NSString* newSDP = [sdp.description stringByReplacingOccurrencesOfString:@"111 103" withString:@"103 111"];
-        
-        RTCSessionDescription* sessionDescription = [[RTCSessionDescription alloc] initWithType:sdp.type sdp:newSDP];
-                                                     
+        RTCSessionDescription* sessionDescription = [[RTCSessionDescription alloc] initWithType:sdp.type sdp:sdp.description];        
         [peerConnection setLocalDescriptionWithDelegate:self sessionDescription:sessionDescription];
     });
 }
@@ -237,7 +232,7 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
             signalingStateString = @"Other state";
             break;
     }
-    
+
     return signalingStateString;
 }
 
@@ -321,8 +316,9 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
 - (void)peerConnectionOnRenegotiationNeeded:(RTCPeerConnection *)peerConnection {
     dispatch_async(dispatch_get_main_queue(), ^{
-    //    [self.peerConnection createOfferWithDelegate:self constraints:[self _mediaConstraints]];
-    // Is this delegate called when creating a PC that is going to *receive* an offer and return an answer?
+        //    [self.peerConnection createOfferWithDelegate:self constraints:[self mediaConstraints]];
+        // Is this delegate called when creating a PC that is going to *receive* an offer and return an answer?
+        NSLog(@"peerConnectionOnRenegotiationNeeded ?");
     });
 }
 
@@ -334,7 +330,7 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection iceGatheringChanged:(RTCICEGatheringState)newState {
     dispatch_async(dispatch_get_main_queue(), ^{
-        // I'm seeing this, but not sure what to do with it yet
+        NSLog(@"peerConnection iceGatheringChanged?");
     });
 }
 
@@ -348,7 +344,10 @@ static NSString * const TLKWebRTCSTUNHostname = @"stun:stun.l.google.com:19302";
     });
 }
 
-- (void)peerConnection:(RTCPeerConnection*)peerConnection didOpenDataChannel:(RTCDataChannel*)dataChannel {
+- (void)peerConnection:(RTCPeerConnection *)peerConnection didOpenDataChannel:(RTCDataChannel *)dataChannel {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"peerConnection didOpenDataChannel?");
+    });
 }
 
 @end
