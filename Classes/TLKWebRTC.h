@@ -20,8 +20,8 @@
 
 @property (nonatomic, weak) id <TLKWebRTCDelegate> delegate;
 
-- (instancetype)initAllowingVideoWithDevice:(AVCaptureDevice *)device;
-- (instancetype)initAllowingVideo:(BOOL)allowVideo;
+- (instancetype)initWithVideoDevice:(AVCaptureDevice *)device;
+- (instancetype)initWithVideo:(BOOL)allowVideo;
 
 - (void)addPeerConnectionForID:(NSString *)identifier;
 - (void)removePeerConnectionForID:(NSString *)identifier;
